@@ -1,0 +1,4 @@
+1. Install Docker Desktop
+2. Run: docker build -t face-recognition-service .
+3. Run: docker run -p 8000:8000 face-recognition-service
+4. Access API at: http://localhost:8000/docs
