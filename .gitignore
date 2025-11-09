@@ -75,10 +75,14 @@ data/gallery_aligned/
 
 # Demo and output
 demo_output/
-*.gif
 *.mp4
 *.avi
 *.mov
+
+# Demo generation scripts
+create_demo_gif.py
+populate_embeddings.py
+demo_visual.py
 
 # Docker
 .dockerignore
@@ -110,3 +114,7 @@ checkpoints/
 # Keep these files
 !.gitkeep
 !models/.gitkeep
+
+
+data\embeddings.db-shm
+data\embeddings.db-wal
