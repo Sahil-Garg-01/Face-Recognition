@@ -10,6 +10,9 @@ facenet-pytorch>=2.6.0
 # Object Detection
 ultralytics>=8.0.0
 
+# Face Landmarks
+#mediapipe>=0.10.0
+
 # Web Framework
 fastapi>=0.104.0
 uvicorn[standard]>=0.24.0

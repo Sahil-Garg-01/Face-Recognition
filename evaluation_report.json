@@ -1,0 +1,227 @@
+{
+  "timestamp": "2025-11-13 00:54:52",
+  "dataset": {
+    "total_images": 20,
+    "total_identities": 20,
+    "samples_per_identity": 1
+  },
+  "clean_accuracy": {
+    "top_1_accuracy": 0.35,
+    "top_5_accuracy": 1.0,
+    "top_1_correct": 7,
+    "total_samples": 20,
+    "detected_faces": 19,
+    "failed_detections": 1,
+    "detection_rate": 0.95,
+    "avg_precision": 0.3181818181818182,
+    "avg_recall": 0.3181818181818182,
+    "avg_f1_score": 0.3181818181818182,
+    "macro_precision": 0.3181818181818182,
+    "macro_recall": 0.3181818181818182,
+    "macro_f1": 0.3181818181818182
+  },
+  "robustness": {
+    "blur": {
+      "accuracy": 0.0,
+      "correct_predictions": 0,
+      "total_samples": 20
+    },
+    "noise": {
+      "accuracy": 0.0,
+      "correct_predictions": 0,
+      "total_samples": 20
+    },
+    "occlusion": {
+      "accuracy": 0.1,
+      "correct_predictions": 2,
+      "total_samples": 20
+    },
+    "brightness": {
+      "accuracy": 0.3,
+      "correct_predictions": 6,
+      "total_samples": 20
+    },
+    "contrast": {
+      "accuracy": 0.35,
+      "correct_predictions": 7,
+      "total_samples": 20
+    }
+  },
+  "failure_analysis": {
+    "detection_failures": [
+      {
+        "image_index": 8,
+        "label": "person17",
+        "reason": "No face detected"
+      }
+    ],
+    "matching_failures": [
+      {
+        "image_index": 0,
+        "label": "person1",
+        "predicted": "Sahil_1",
+        "confidence": 0.6771116256713867,
+        "threshold": 0.6
+      },
+      {
+        "image_index": 1,
+        "label": "person10",
+        "predicted": "Unknown",
+        "confidence": 0.5389541387557983,
+        "threshold": 0.6
+      },
+      {
+        "image_index": 2,
+        "label": "person11",
+        "predicted": "Unknown",
+        "confidence": 0.430948406457901,
+        "threshold": 0.6
+      },
+      {
+        "image_index": 3,
+        "label": "person12",
+        "predicted": "Unknown",
+        "confidence": 0.2717292606830597,
+        "threshold": 0.6
+      },
+      {
+        "image_index": 6,
+        "label": "person15",
+        "predicted": "Unknown",
+        "confidence": 0.4690887928009033,
+        "threshold": 0.6
+      },
+      {
+        "image_index": 9,
+        "label": "person18",
+        "predicted": "Unknown",
+        "confidence": 0.5167362689971924,
+        "threshold": 0.6
+      },
+      {
+        "image_index": 11,
+        "label": "person2",
+        "predicted": "Unknown",
+        "confidence": 0.46692293882369995,
+        "threshold": 0.6
+      },
+      {
+        "image_index": 12,
+        "label": "person20",
+        "predicted": "Unknown",
+        "confidence": 0.5131851434707642,
+        "threshold": 0.6
+      },
+      {
+        "image_index": 14,
+        "label": "person4",
+        "predicted": "Unknown",
+        "confidence": 0.4881897568702698,
+        "threshold": 0.6
+      },
+      {
+        "image_index": 15,
+        "label": "person5",
+        "predicted": "Unknown",
+        "confidence": 0.21882900595664978,
+        "threshold": 0.6
+      },
+      {
+        "image_index": 16,
+        "label": "person6",
+        "predicted": "Unknown",
+        "confidence": 0.572778046131134,
+        "threshold": 0.6
+      },
+      {
+        "image_index": 19,
+        "label": "person9",
+        "predicted": "Unknown",
+        "confidence": 0.4891851544380188,
+        "threshold": 0.6
+      }
+    ],
+    "low_confidence_matches": [
+      {
+        "image_index": 0,
+        "label": "person1",
+        "predicted": "Sahil_1",
+        "confidence": 0.6771116256713867
+      },
+      {
+        "image_index": 7,
+        "label": "person16",
+        "predicted": "person16",
+        "confidence": 0.6596862077713013
+      },
+      {
+        "image_index": 10,
+        "label": "person19",
+        "predicted": "person19",
+        "confidence": 0.634812593460083
+      },
+      {
+        "image_index": 18,
+        "label": "person8",
+        "predicted": "person8",
+        "confidence": 0.6175830960273743
+      }
+    ]
+  },
+  "mitigations": {
+    "occlusions": {
+      "description": "Faces with masks, glasses, or partial coverage",
+      "mitigations": [
+        "Use landmark-based face alignment (already implemented)",
+        "Train on augmented data with occlusions",
+        "Use attention mechanisms to focus on visible regions",
+        "Deploy ensemble methods for robustness"
+      ]
+    },
+    "low_light": {
+      "description": "Poor lighting conditions or shadows",
+      "mitigations": [
+        "Apply histogram equalization preprocessing",
+        "Use CLAHE (Contrast Limited Adaptive Histogram Equalization)",
+        "Train on low-light augmented data",
+        "Increase detection confidence threshold in low-light"
+      ]
+    },
+    "pose_variation": {
+      "description": "Non-frontal face angles",
+      "mitigations": [
+        "Use 3D face alignment for pose normalization",
+        "Train on multi-pose datasets",
+        "Use pose-robust embeddings (e.g., ArcFace with margin)",
+        "Apply synthetic pose augmentation during training"
+      ]
+    },
+    "image_quality": {
+      "description": "Blurry, low-resolution images",
+      "mitigations": [
+        "Apply super-resolution preprocessing",
+        "Use image quality assessment filters",
+        "Train on quality-augmented data",
+        "Reject very low-quality detections"
+      ]
+    },
+    "small_faces": {
+      "description": "Faces too small in image",
+      "mitigations": [
+        "Use multi-scale detection (already in YOLO)",
+        "Increase min_face_area threshold tuning",
+        "Apply upsampling for small detections",
+        "Use contextual information for small face detection"
+      ]
+    },
+    "false_positives": {
+      "description": "Detecting non-face objects as faces",
+      "mitigations": [
+        "Increase NMS threshold (already tuned to 0.5)",
+        "Use face landmark validation",
+        "Apply face quality filters (already implemented)",
+        "Use multiple detection models for consensus"
+      ]
+    }
+  }
+}

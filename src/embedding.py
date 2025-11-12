@@ -13,6 +13,8 @@ import torch
 import torch.nn.functional as F
 from facenet_pytorch import InceptionResnetV1
 
+from src.preprocessing import align_face, normalize_face
+
 logger = logging.getLogger(__name__)
 
 
@@ -40,32 +42,35 @@ class FaceEmbedder:
         
         logger.info(f"FaceNet model loaded (pretrained on {model_name})")
     
-    def extract_embedding(self, face_image: np.ndarray) -> np.ndarray:
+    def extract_embedding(self, face_image: np.ndarray, landmarks: np.ndarray = None) -> np.ndarray:
         """
         Extract embedding from face image
         
         Args:
             face_image: Face image (BGR or RGB, should be 112x112 or larger)
+            landmarks: Optional 5-point landmarks (5, 2) for face alignment
             
         Returns:
             512-D embedding vector (L2 normalized)
         """
-        # Preprocess image
-        if face_image.ndim == 3 and face_image.shape[2] == 3:
-            # Assume BGR, convert to RGB
-            if face_image.mean() > 100:  # Likely BGR
-                face_image = face_image[..., ::-1]
+        # Apply face alignment if landmarks provided
+        if landmarks is not None and len(landmarks) == 5:
+            try:
+                face_image = align_face(face_image, landmarks)
+            except Exception as e:
+                logger.debug(f"Face alignment failed: {e}, using original image")
         
-        # Normalize to 0-1 range
-        if face_image.max() > 1.0:
-            face_image = face_image.astype(np.float32) / 255.0
-        else:
-            face_image = face_image.astype(np.float32)
+        # Apply normalization
+        face_image = normalize_face(face_image)
         
         # Convert to tensor (C, H, W)
-        face_tensor = torch.from_numpy(face_image)
-        if face_tensor.dim() == 3 and face_tensor.shape[2] == 3:
-            face_tensor = face_tensor.permute(2, 0, 1)
+        if face_image.ndim == 3 and face_image.shape[2] == 3:
+            face_tensor = torch.from_numpy(face_image.transpose(2, 0, 1))
+        else:
+            face_tensor = torch.from_numpy(face_image)
+        
+        # Ensure float32
+        face_tensor = face_tensor.float()
         
         # Add batch dimension
         face_tensor = face_tensor.unsqueeze(0).to(self.device)
@@ -79,23 +84,68 @@ class FaceEmbedder:
         
         return embedding.cpu().numpy()[0]
     
-    def extract_embeddings_batch(self, face_images: List[np.ndarray]) -> np.ndarray:
+    def extract_embeddings_batch(self, face_images: List[np.ndarray], 
+                                landmarks_list: List[np.ndarray] = None) -> np.ndarray:
         """
         Extract embeddings from multiple face images
         
         Args:
             face_images: List of face images
+            landmarks_list: Optional list of landmarks for each image
             
         Returns:
             Array of embeddings (N, 512)
         """
         embeddings = []
         
-        for face_image in face_images:
-            embedding = self.extract_embedding(face_image)
+        for idx, face_image in enumerate(face_images):
+            landmarks = None
+            if landmarks_list is not None and idx < len(landmarks_list):
+                landmarks = landmarks_list[idx]
+            
+            embedding = self.extract_embedding(face_image, landmarks)
             embeddings.append(embedding)
         
         return np.array(embeddings)
+    
+    def convert_to_onnx(self, output_path: str, model_name: str = "facenet_embedder") -> str:
+        """
+        Convert FaceNet model to ONNX format for optimized inference
+        
+        Args:
+            output_path: Directory to save ONNX model
+            model_name: Name for the ONNX model file
+            
+        Returns:
+            Path to saved ONNX model
+        """
+        try:
+            # Create dummy input (standard 160x160 face image for FaceNet)
+            dummy_input = torch.randn(1, 3, 160, 160).to(self.device)
+            
+            # Export to ONNX
+            onnx_path = Path(output_path) / f"{model_name}.onnx"
+            onnx_path.parent.mkdir(parents=True, exist_ok=True)
+            
+            torch.onnx.export(
+                self.model,
+                dummy_input,
+                str(onnx_path),
+                input_names=['input'],
+                output_names=['output'],
+                dynamic_axes={'input': {0: 'batch_size'}, 'output': {0: 'batch_size'}},
+                opset_version=18,  # Use latest opset for better compatibility
+                do_constant_folding=True,
+                verbose=False
+            )
+            
+            logger.info(f"FaceNet model converted to ONNX: {onnx_path}")
+            return str(onnx_path)
+        
+        except Exception as e:
+            logger.error(f"ONNX conversion failed: {e}")
+            # Return a more descriptive error message but don't raise
+            return f"ONNX conversion failed: {str(e)}"
 
 
 class EmbeddingDatabase:
@@ -244,14 +294,15 @@ class EmbeddingDatabase:
     def get_identities(self) -> List[Dict]:
         """Get list of all identities with metadata"""
         with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.execute('SELECT name, num_images, created_at FROM identities ORDER BY name')
+            cursor = conn.execute('SELECT id, name, num_images, created_at FROM identities ORDER BY name')
             
             identities = []
             for row in cursor.fetchall():
                 identities.append({
-                    'name': row[0],
-                    'num_images': row[1],
-                    'created_at': row[2]
+                    'id': row[0],
+                    'name': row[1],
+                    'num_images': row[2],
+                    'created_at': row[3]
                 })
         
         return identities

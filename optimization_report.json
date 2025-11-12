@@ -1,0 +1,57 @@
+{
+  "test_images": 20,
+  "timestamp": "2025-11-13 01:00:26",
+  "detection_with_postprocessing": {
+    "num_images": 20,
+    "mean_latency_ms": 106.55304193496704,
+    "std_latency_ms": 7.295050903307221,
+    "min_latency_ms": 94.8798656463623,
+    "max_latency_ms": 120.35226821899414,
+    "fps": 9.384997198018375
+  },
+  "detection_without_postprocessing": {
+    "num_images": 20,
+    "mean_latency_ms": 104.17193174362183,
+    "std_latency_ms": 7.816535726167997,
+    "min_latency_ms": 89.8590087890625,
+    "max_latency_ms": 118.04509162902832,
+    "fps": 9.599514795032372
+  },
+  "embedding": {
+    "num_images": 20,
+    "mean_latency_ms": 73.3826756477356,
+    "std_latency_ms": 17.341692725982064,
+    "min_latency_ms": 61.69629096984863,
+    "max_latency_ms": 141.129732131958,
+    "fps": 13.627194582007007
+  },
+  "end_to_end": {
+    "num_images": 20,
+    "detection": {
+      "mean_ms": 100.01450777053833,
+      "std_ms": 5.4076376381735844
+    },
+    "embedding": {
+      "mean_ms": 70.43776512145996,
+      "std_ms": 5.044162659812018
+    },
+    "matching": {
+      "mean_ms": 0.19788742065429688,
+      "std_ms": 0.05821711093962682
+    },
+    "total": {
+      "mean_ms": 170.65186500549316,
+      "std_ms": 9.66449838935465,
+      "fps": 5.859883218784692
+    }
+  },
+  "postprocessing_effectiveness": {
+    "avg_detections_without_postprocessing": 0.95,
+    "avg_detections_with_postprocessing": 0.95,
+    "false_positive_reduction_percent": 0.0
+  },
+  "onnx_conversion": {
+    "facenet_onnx": "C:\\SAHIL\\assignment\\models\\onnx\\facenet_embedder.onnx",
+    "status": "success"
+  }
+}

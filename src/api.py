@@ -6,8 +6,9 @@ REST endpoints for face detection and recognition
 import numpy as np
 import cv2
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 import logging
+import time
 
 from fastapi import FastAPI, File, UploadFile, HTTPException, Query
 
@@ -15,7 +16,7 @@ from fastapi import FastAPI, File, UploadFile, HTTPException, Query
 from src.detection import FaceDetector
 from src.embedding import FaceEmbedder, EmbeddingDatabase
 from src.matching import FaceRecognitionMatcher
-from src.database import DatabaseHandler
+from src.optimization import PerformanceBenchmark
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -34,8 +35,14 @@ DB_PATH = BASE_PATH / 'data' / 'embeddings.db'
 
 # Initialize components
 try:
-    detector = FaceDetector(model_path=str(MODEL_PATH), confidence=0.5)
-    logger.info("✓ Face detector initialized")
+    detector = FaceDetector(
+        model_path=str(MODEL_PATH), 
+        confidence=0.5,
+        nms_threshold=0.5,
+        min_face_area=400,
+        apply_postprocessing=True
+    )
+    logger.info("✓ Face detector initialized with post-processing")
 except Exception as e:
     logger.error(f"Error initializing detector: {e}")
     detector = None
@@ -53,13 +60,6 @@ try:
 except Exception as e:
     logger.error(f"Error initializing embedding database: {e}")
     embedding_db = None
-
-try:
-    db_handler = DatabaseHandler(str(DB_PATH))
-    logger.info("✓ Database handler initialized")
-except Exception as e:
-    logger.error(f"Error initializing database handler: {e}")
-    db_handler = None
 
 # Initialize matcher
 try:
@@ -196,8 +196,9 @@ async def recognize_face(
                 continue
             
             try:
-                # Extract embedding
-                embedding = embedder.extract_embedding(face_image)
+                # Extract embedding with optional landmarks
+                landmarks = detection.get('landmarks')
+                embedding = embedder.extract_embedding(face_image, landmarks)
                 
                 # Match against gallery
                 match_result = matcher.match(embedding)
@@ -246,7 +247,7 @@ async def add_identity(
     Returns:
         Confirmation with embedding ID
     """
-    if not embedder or not embedding_db or not db_handler:
+    if not embedder or not embedding_db:
         raise HTTPException(status_code=503, detail="Service not available")
     
     try:
@@ -294,11 +295,13 @@ async def list_identities(limit: Optional[int] = Query(None, ge=1)):
     Returns:
         List of identities with metadata
     """
-    if not db_handler:
+    if not embedding_db:
         raise HTTPException(status_code=503, detail="Database not available")
     
     try:
-        identities = db_handler.list_identities(limit=limit)
+        identities = embedding_db.get_identities()
+        if limit:
+            identities = identities[:limit]
         return {
             "status": "success",
             "count": len(identities),

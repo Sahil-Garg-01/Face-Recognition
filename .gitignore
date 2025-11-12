@@ -118,3 +118,6 @@ checkpoints/
 
 data\embeddings.db-shm
 data\embeddings.db-wal
+
+OPTIMIZATION_SUMMARY.md
+EVALUATION_SUMMARY.md
